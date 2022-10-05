@@ -1,3 +1,3 @@
-# must be ended with a new line "LF" (Unix) and not "CRLF" (Windows)
-#* * * * * echo "Hello world" >> /var/log/cron.log 2>&1
-# An empty line is required at the end of this file for a valid cron file.
+#~ MAGENTO START 2d22aa451813cda4fbe2784e3e2f6f3a827532eea76ded46ef31a3e12155ea96
+* * * * * /usr/bin/php8.1 /var/www/html/project-files/bin/magento cron:run 2>&1 | grep -v "Ran jobs by schedule" >> /var/www/html/project-files/var/log/magento.cron.log
+#~ MAGENTO END 2d22aa451813cda4fbe2784e3e2f6f3a827532eea76ded46ef31a3e12155ea96
