@@ -1,0 +1,20 @@
+upstream fastcgi_backend {
+   # use tcp connection
+   # server  127.0.0.1:9000;
+   # or socket
+   server   unix:/var/run/php/php8.1-fpm.sock;
+}
+
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    index index.php index.html index.htm index.nginx-debian.html;
+    
+    server_name _;
+
+    set $MAGE_ROOT ${WEB_ROOT};
+    set $MAGE_DEBUG_SHOW_ARGS 0;
+    include ${WEB_ROOT}/nginx.conf.sample;
+
+}

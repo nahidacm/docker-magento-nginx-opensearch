@@ -1,0 +1,105 @@
+version: "3.7"
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nahidacm/magento244
+    container_name: ${COMPOSE_PROJECT_NAME:?err}_backend
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Dhaka
+      - WEB_DOCUMENT_ROOT=/var/www/html/project-files
+      - php.session.gc_maxlifetime=31536000
+      - php.session.cookie_lifetime=31536000
+      - php.memory_limit=2048M
+      - PHP_DISPLAY_ERRORS=1
+    ports:
+      - "${DOCKER_NGINX_HOST_PORT:?err}:80"
+    volumes:
+      - ./:/var/www/html
+      # - ./docker-compose/backend/etc/php/conf.d/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini
+    networks:
+      - magento244
+
+  phpmyadmin:
+    image: 'phpmyadmin/phpmyadmin:latest'
+    container_name: ${COMPOSE_PROJECT_NAME:?err}_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "${DOCKER_PHPMYADMIN_HOST_PORT:?err}:80"
+    environment:
+      - PMA_HOST=db
+      - TZ=Asia/Dhaka
+      - UPLOAD_LIMIT=300M
+    networks:
+      - magento244
+
+  db:
+    image: mariadb:10.4
+    container_name: ${COMPOSE_PROJECT_NAME:?err}_db
+    restart: unless-stopped
+    command: --max_allowed_packet=32505856
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+      TZ: Asia/Dhaka
+    volumes:
+      # - ./docker-compose/mysql:/docker-entrypoint-initdb.d
+      - mysql-data:/var/lib/mysql
+    networks:
+      - magento244
+    ports:
+      - "${DOCKER_DB_HOST_PORT:?err}:3306"
+
+# opensearch stack
+  opensearch-node1:
+    image: opensearchproject/opensearch:2.0.0
+    container_name: ${COMPOSE_PROJECT_NAME:?err}_opensearch-node1
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=opensearch-node1
+      - bootstrap.memory_lock=true # along with the memlock settings below, disables swapping
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m" # minimum and maximum Java heap size, recommend setting both to 50% of system RAM
+      - "DISABLE_INSTALL_DEMO_CONFIG=true" # disables execution of install_demo_configuration.sh bundled with security plugin, which installs demo certificates and security configurations to OpenSearch
+      - "DISABLE_SECURITY_PLUGIN=true" # disables security plugin entirely in OpenSearch by setting plugins.security.disabled: true in opensearch.yml
+      - "discovery.type=single-node" # disables bootstrap checks that are enabled when network.host is set to a non-loopback address
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536 # maximum number of open files for the OpenSearch user, set to at least 65536 on modern systems
+        hard: 65536
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    ports:
+      - ${DOCKER_OPENSEARCH_PORT}:9200
+      - ${DOCKER_OPENSEARCH_PERFORM_PORT}:9600 # required for Performance Analyzer
+    networks:
+      - magento244
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.0.0
+    container_name: ${COMPOSE_PROJECT_NAME:?err}_opensearch-dashboards
+    ports:
+      - ${DOCKER_OPENSEARCH_DASH_PORT}:5601
+    expose:
+      - "5601"
+    environment:
+      - 'OPENSEARCH_HOSTS=["http://opensearch-node1:9200"]'
+      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true" # disables security dashboards plugin in OpenSearch Dashboards
+    networks:
+      - magento244
+# End opensearch stack
+
+networks:
+  magento244:
+    driver: bridge
+volumes:
+  mysql-data:
+  opensearch-data:
