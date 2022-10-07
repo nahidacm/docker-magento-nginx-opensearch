@@ -9,12 +9,9 @@ server {
     listen 80 default_server;
     listen [::]:80 default_server;
 
-    index index.php index.html index.htm index.nginx-debian.html;
-    
-    server_name _;
+    server_name magento244.loc;
 
     set $MAGE_ROOT ${WEB_ROOT};
     set $MAGE_DEBUG_SHOW_ARGS 0;
-    include ${WEB_ROOT}/nginx.conf.sample;
-
+    include site-config/nginx-magento.conf;
 }

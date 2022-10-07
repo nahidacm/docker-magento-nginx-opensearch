@@ -25,20 +25,22 @@ RUN apt-get install -y php-bcmath php-ctype php-curl \
 
 # Nginx configuration
 RUN rm /etc/nginx/sites-enabled/default
-COPY config/nginx/templates/default.conf.template /etc/nginx/conf.d/default.conf.template
+COPY docker-config/nginx/templates/default.conf.template /etc/nginx/conf.d/default.conf.template
+RUN mkdir -p /etc/nginx/site-config/
+COPY docker-config/nginx/nginx-magento.conf /etc/nginx/site-config/nginx-magento.conf
 
 COPY docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh
 
 # PHP configuration
 RUN mkdir -p /var/run/php/
-COPY config/php/custom.ini 	/etc/php/8.1/fpm/conf.d/custom.ini
+COPY docker-config/php/custom.ini 	/etc/php/8.1/fpm/conf.d/custom.ini
 
 # Supervisor configuration
-COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker-config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Copy cron file to the cron.d directory
-COPY config/crontabs /etc/cron.d/crontabs
+COPY docker-config/crontabs /etc/cron.d/crontabs
  
 # Give execution rights on the cron job
 RUN chmod 0644 /etc/cron.d/crontabs

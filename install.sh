@@ -1,7 +1,8 @@
+docker exec -it magento244_backend /bin/bash
 composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition project-files
 cd project-files
 bin/magento setup:install \
---base-url=http://localhost:8111 \
+--base-url=http://magento244.loc \
 --db-host=db \
 --db-name=magento244 \
 --db-user=mygento \
@@ -13,7 +14,7 @@ bin/magento setup:install \
 --admin-password=admin123 \
 --language=en_US \
 --currency=USD \
---timezone=America/Chicago \
+--timezone=Asia/Dhaka \
 --use-rewrites=1 \
 --search-engine=elasticsearch7 \
 --elasticsearch-host=opensearch-node1 \
